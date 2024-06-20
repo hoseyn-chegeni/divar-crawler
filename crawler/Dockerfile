@@ -10,7 +10,7 @@ COPY . /app
 COPY requirements.txt /app/requirements.txt
 
 # Install any dependencies
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install -r /app/requirements.txt
 
 # Expose port 8000 for the crawler service
 EXPOSE 8000
