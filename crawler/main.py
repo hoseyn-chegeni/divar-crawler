@@ -3,6 +3,7 @@ import requests
 
 app = FastAPI()
 
+
 @app.get("/crawls")
 def read_crawls():
     response = requests.get("http://job_service:8001/jobs")
