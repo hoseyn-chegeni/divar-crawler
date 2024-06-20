@@ -5,8 +5,10 @@ class JobBase(BaseModel):
     title: str
     description: str
 
+
 class JobCreate(JobBase):
     pass
+
 
 class Job(JobBase):
     id: int
@@ -14,6 +16,7 @@ class Job(JobBase):
 
     class Config:
         orm_mode = True
+
 
 class UserBase(BaseModel):
     email: str
