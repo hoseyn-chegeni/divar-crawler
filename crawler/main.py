@@ -18,7 +18,9 @@ def get_db():
 
 
 @app.post("/crawled_data/", response_model=schemas.CrawledData, status_code=201)
-def create_crawled_data(crawled_data: schemas.CrawledDataCreate, db: Session = Depends(get_db)):
+def create_crawled_data(
+    crawled_data: schemas.CrawledDataCreate, db: Session = Depends(get_db)
+):
     return crud.create_crawled_data(db=db, crawled_data=crawled_data)
 
 
