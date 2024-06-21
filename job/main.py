@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sql_app import crud, models, schemas
 from sql_app.database import SessionLocal, engine
-
+import requests
 models.Base.metadata.create_all(bind=engine)
 
 
@@ -51,3 +51,19 @@ def create_job_for_user(
 def read_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     jobs = crud.get_jobs(db, skip=skip, limit=limit)
     return jobs
+
+
+
+@app.post("/send_job/")
+def create_job(title:str, content: str):
+    url = "http://crawler_service:8000/crawled_data/"
+    payload = {
+        "title": title,
+        "content": content
+    }
+    response = requests.post(url, json=payload)
+    
+    if response.status_code == 201:
+        return response.json()
+    else:
+        raise HTTPException(status_code=response.status_code, detail=response.json())
