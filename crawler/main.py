@@ -2,6 +2,8 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sql_app import crud, models, schemas
 from sql_app.database import SessionLocal, engine
+from bs4 import BeautifulSoup
+import requests
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -36,3 +38,17 @@ def read_crawled_data(skip: int = 0, limit: int = 100, db: Session = Depends(get
 #     if db_user is None:
 #         raise HTTPException(status_code=404, detail="user not found")
 #     return db_user
+
+
+@app.get("/crawl-title/")
+def crawl_title(url: str):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    soup = BeautifulSoup(response.content, 'html.parser')
+    title = soup.title.string if soup.title else 'No title found'
+    
+    return {"url": url, "title": title}
