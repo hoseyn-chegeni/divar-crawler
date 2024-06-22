@@ -3,7 +3,7 @@ from .database import Base
 
 
 class CrawledData(Base):
-    __tablename__ = "users"
+    __tablename__ = "crawled_data"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)

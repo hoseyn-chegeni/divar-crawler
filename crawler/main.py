@@ -52,3 +52,27 @@ def crawl_title(url: str):
     title = soup.title.string if soup.title else 'No title found'
     
     return {"url": url, "title": title}
+
+
+
+
+@app.get("/crawl/")
+def crawl_and_store_titles(url: str, db: Session = Depends(get_db)):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    soup = BeautifulSoup(response.content, 'html.parser')
+    articles = soup.find_all("article", class_="kt-post-card")
+    titles = []
+    for article in articles:
+        title_tag = article.find("h2", class_="kt-post-card__title")
+        if title_tag:
+            title = title_tag.get_text(strip=True)
+            titles.append(title)
+            crud.create_crawled_data(db, schemas.CrawledDataCreate(title=title, content=url))
+    
+    return {"url": url, "title_count": len(titles), "titles": titles}
+
