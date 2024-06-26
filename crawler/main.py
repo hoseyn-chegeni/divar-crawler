@@ -34,7 +34,7 @@ def read_crawled_data(skip: int = 0, limit: int = 100, db: Session = Depends(get
 
 @app.get("/crawled_data/{crawled_data_id}/", response_model=schemas.CrawledData)
 def read_crawled_data(crawled_data_id: int, db: Session = Depends(get_db)):
-    db_crawled_data= crud.get_crawled_data(db, crawled_data_id=crawled_data_id)
+    db_crawled_data= crud.get_crawled_data(db, crawled_data_id)
     if db_crawled_data is None:
         raise HTTPException(status_code=404, detail="data not found")
     return db_crawled_data
