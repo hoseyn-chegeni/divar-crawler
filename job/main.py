@@ -54,10 +54,18 @@ def read_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return jobs
 
 
+
 @app.post("/send_job/", tags=['Job'])
-def create_job(title: str, content: str):
-    url = "http://crawler_service:8000/crawled_data/"
-    payload = {"title": title, "content": content}
+def create_job(user_id: int, title: str, content: str, city: str = None, category: str = None, number_of_cards: str = None):
+    url = "http://crawler_service:8000/jobs/"
+    payload = {
+        "user_id": user_id,
+        "title": title,
+        "content": content,
+        "city": city,
+        "category": category,
+        "number_of_cards": number_of_cards
+    }
     response = requests.post(url, json=payload)
 
     if response.status_code == 201:
