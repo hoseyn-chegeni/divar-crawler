@@ -50,3 +50,16 @@ class JobCreate(JobBase):
 
 class Job(JobBase):
     id: int
+
+
+class JobStatusEnum(str, Enum):
+    in_queue = "in_queue"
+    in_progress = "in_progress"
+    done = "done"
+    failed = "failed"
+
+
+
+class JobStatus(BaseModel):
+    job_id: int
+    status: JobStatusEnum

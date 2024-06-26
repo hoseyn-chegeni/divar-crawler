@@ -162,3 +162,11 @@ def crawl_and_store_titles_task(url: str, db: Session):
 def crawl_and_store_titles(url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     background_tasks.add_task(crawl_and_store_titles_task, url, db)
     return {"message": "Crawling and storing titles in the background"}
+
+
+@app.get("/jobs/{job_id}/status", response_model=schemas.JobStatus, tags=["Jobs"])
+def get_job_status(job_id: int, db: Session = Depends(get_db)):
+    job = crud.get_job_status(db, job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return schemas.JobStatus(job_id=job.id, status=job.status.value)

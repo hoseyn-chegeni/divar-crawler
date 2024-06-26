@@ -105,3 +105,8 @@ def delete_job(db: Session, job_id: int):
     db.delete(db_job)
     db.commit()
     return db_job
+
+
+
+def get_job_status(db: Session, job_id: int):
+    return db.query(Job).filter(Job.id == job_id).first()
