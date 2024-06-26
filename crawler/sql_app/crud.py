@@ -72,8 +72,6 @@ def get_jobs_by_user_id(db: Session, user_id: int, skip: int = 0, limit: int = 1
 def create_job(db: Session, job: JobCreate):
     db_job = Job(
         user_id=job.user_id,
-        title=job.title,
-        content=job.content,
         city=job.city,
         category=job.category,
         number_of_cards=job.number_of_cards,

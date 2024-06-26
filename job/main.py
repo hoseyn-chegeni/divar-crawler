@@ -55,20 +55,29 @@ def read_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 
 
+
 @app.post("/send_job/", tags=['Job'])
-def create_job(user_id: int, title: str, content: str, city: str = None, category: str = None, number_of_cards: str = None):
+def create_job(
+    user_id: int,
+    city: str = None,
+    category: str = None,
+    number_of_cards: str = None,
+):
     url = "http://crawler_service:8000/jobs/"
     payload = {
         "user_id": user_id,
-        "title": title,
-        "content": content,
         "city": city,
         "category": category,
-        "number_of_cards": number_of_cards
+        "number_of_cards": number_of_cards,
     }
     response = requests.post(url, json=payload)
 
+    try:
+        response_json = response.json()
+    except ValueError:
+        raise HTTPException(status_code=response.status_code, detail="Invalid JSON response")
+
     if response.status_code == 201:
-        return response.json()
+        return response_json
     else:
-        raise HTTPException(status_code=response.status_code, detail=response.json())
+        raise HTTPException(status_code=response.status_code, detail=response_json)
