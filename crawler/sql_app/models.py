@@ -1,5 +1,12 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, Enum
 from .database import Base
+import enum
+
+class JobStatus(enum.Enum):
+    in_queue = "in_queue"
+    in_progress = "in_progress"
+    done = "done"
+    failed = "failed"
 
 class CrawledData(Base):
     __tablename__ = "crawled_data"
@@ -23,3 +30,4 @@ class Job (Base):
     city = Column(String, nullable=True)
     category = Column(String, nullable=True)
     number_of_cards = Column(String, nullable=True)
+    status = Column(Enum(JobStatus), default=JobStatus.in_queue)

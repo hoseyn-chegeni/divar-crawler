@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from enum import Enum
 
 class CrawledDataBase(BaseModel):
     title: str
@@ -23,11 +24,22 @@ class CrawledData(CrawledDataBase):
 
 
 
+
+class JobStatus(str, Enum):
+    in_queue = "in_queue"
+    in_progress = "in_progress"
+    done = "done"
+    failed = "failed"
+
+
+
 class JobBase(BaseModel):
     user_id :int
     city :str | None = None
     category :str | None = None
     number_of_cards :str | None = None
+    status: JobStatus = JobStatus.in_queue
+
 
     class Config:
         orm_mode = True
