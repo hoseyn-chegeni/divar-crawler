@@ -58,16 +58,17 @@ def delete_crawled_data(db: Session, data_id: int):
     return db_crawled_data
 
 
-
-
 def get_jobs(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Job).offset(skip).limit(limit).all()
+
 
 def get_job_by_id(db: Session, job_id: int):
     return db.query(Job).filter(Job.id == job_id).first()
 
+
 def get_jobs_by_user_id(db: Session, user_id: int, skip: int = 0, limit: int = 100):
     return db.query(Job).filter(Job.user_id == user_id).offset(skip).limit(limit).all()
+
 
 def create_job(db: Session, job: JobCreate):
     db_job = Job(
@@ -75,7 +76,7 @@ def create_job(db: Session, job: JobCreate):
         city=job.city,
         category=job.category,
         number_of_cards=job.number_of_cards,
-        status=job.status
+        status=job.status,
     )
     db.add(db_job)
     db.commit()
@@ -94,6 +95,7 @@ def update_job(db: Session, job_id: int, job: JobBase):
     db.commit()
     db.refresh(db_job)
     return db_job
+
 
 def delete_job(db: Session, job_id: int):
     db_job = db.query(Job).filter(Job.id == job_id).first()

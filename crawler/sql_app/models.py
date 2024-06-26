@@ -2,11 +2,13 @@ from sqlalchemy import Column, Integer, String, Boolean, Enum
 from .database import Base
 import enum
 
+
 class JobStatus(enum.Enum):
     in_queue = "in_queue"
     in_progress = "in_progress"
     done = "done"
     failed = "failed"
+
 
 class CrawledData(Base):
     __tablename__ = "crawled_data"
@@ -23,8 +25,9 @@ class CrawledData(Base):
     token = Column(String, nullable=True)
     category = Column(String, nullable=True)
 
-class Job (Base):
-    __tablename__ = 'job'
+
+class Job(Base):
+    __tablename__ = "job"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True)
     city = Column(String, nullable=True)

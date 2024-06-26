@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from enum import Enum
 
+
 class CrawledDataBase(BaseModel):
     title: str
     url: str | None = None
@@ -16,13 +17,13 @@ class CrawledDataBase(BaseModel):
     class Config:
         orm_mode = True
 
+
 class CrawledDataCreate(CrawledDataBase):
     pass
 
+
 class CrawledData(CrawledDataBase):
     id: int
-
-
 
 
 class JobStatus(str, Enum):
@@ -32,20 +33,20 @@ class JobStatus(str, Enum):
     failed = "failed"
 
 
-
 class JobBase(BaseModel):
-    user_id :int
-    city :str | None = None
-    category :str | None = None
-    number_of_cards :str | None = None
+    user_id: int
+    city: str | None = None
+    category: str | None = None
+    number_of_cards: str | None = None
     status: JobStatus = JobStatus.in_queue
-
 
     class Config:
         orm_mode = True
 
-class JobCreate (JobBase):
+
+class JobCreate(JobBase):
     pass
+
 
 class Job(JobBase):
     id: int
