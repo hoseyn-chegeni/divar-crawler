@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from sql_app import crud, models, schemas
 from sql_app.database import SessionLocal, engine
 from bs4 import BeautifulSoup
 import requests
-
+import time
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
@@ -69,9 +69,7 @@ def crawl_title(url: str):
     return {"url": url, "title": title}
 
 
-# Crawl and store titles from articles on a given URL
-@app.get("/crawl/", tags=["Crawled Data"])
-def crawl_and_store_titles(url: str, db: Session = Depends(get_db)):
+def crawl_and_store_titles_task(url: str, db: Session):
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -87,9 +85,20 @@ def crawl_and_store_titles(url: str, db: Session = Depends(get_db)):
             title = title_tag.get_text(strip=True)
             titles.append(title)
             # Create a new crawled data entry for each title
-            crud.create_crawled_data(db, schemas.CrawledDataCreate(title=title))
+            db_crawled_data = schemas.CrawledDataCreate(title=title)
+            crud.create_crawled_data(db, db_crawled_data)
+    # Log to file (optional)
+    with open('log.txt', mode='a') as log_file:
+        content = f"Crawled URL: {url}, Titles: {titles}\n"
+        log_file.write(content)
 
-    return {"url": url, "title_count": len(titles), "titles": titles}
+
+@app.get("/crawl/", tags=["Crawled Data"])
+def crawl_and_store_titles(url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    background_tasks.add_task(crawl_and_store_titles_task, url, db)
+    return {"message": "Crawling and storing titles in the background"}
+
+
 
 
 @app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
@@ -115,3 +124,41 @@ def read_jobs_by_user(
     user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):
     return crud.get_jobs_by_user_id(db, user_id=user_id, skip=skip, limit=limit)
+
+
+
+
+
+
+
+
+
+
+def crawl_and_store_titles_task(url: str, db: Session):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    soup = BeautifulSoup(response.content, "html.parser")
+    articles = soup.find_all("article", class_="kt-post-card")
+    titles = []
+    for article in articles:
+        title_tag = article.find("h2", class_="kt-post-card__title")
+        if title_tag:
+            title = title_tag.get_text(strip=True)
+            titles.append(title)
+            # Create a new crawled data entry for each title
+            db_crawled_data = schemas.CrawledDataCreate(title=title)
+            crud.create_crawled_data(db, db_crawled_data)
+    # Log to file (optional)
+    with open('log.txt', mode='a') as log_file:
+        content = f"Crawled URL: {url}, Titles: {titles}\n"
+        log_file.write(content)
+
+
+@app.get("/crawl/", tags=["Crawled Data"])
+def crawl_and_store_titles(url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    background_tasks.add_task(crawl_and_store_titles_task, url, db)
+    return {"message": "Crawling and storing titles in the background"}
