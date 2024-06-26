@@ -86,3 +86,14 @@ def create_job(
         return response_json
     else:
         raise HTTPException(status_code=response.status_code, detail=response_json)
+
+
+@app.get("/get_status/{job_id}", tags=["Job"])
+def get_job_status(job_id: int):
+    url = f"http://crawler_service:8000/jobs/{job_id}/status"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise HTTPException(status_code=response.status_code, detail=response.json())
