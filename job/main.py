@@ -18,7 +18,7 @@ def get_db():
         db.close()
 
 
-@app.post("/users/", response_model=schemas.User, status_code=201)
+@app.post("/users/", response_model=schemas.User, status_code=201, tags=['User'])
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
@@ -26,13 +26,13 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-@app.get("/users/", response_model=list[schemas.User])
+@app.get("/users/", response_model=list[schemas.User], tags=['User'])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = crud.get_users(db, skip=skip, limit=limit)
     return users
 
 
-@app.get("/users/{user_id}", response_model=schemas.User)
+@app.get("/users/{user_id}", response_model=schemas.User, tags=['User'])
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = crud.get_user(db, user_id=user_id)
     if db_user is None:
@@ -40,7 +40,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.post("/users/{user_id}/items/", response_model=schemas.Job, status_code=201)
+@app.post("/users/{user_id}/items/", response_model=schemas.Job, status_code=201, tags=['User'])
 def create_job_for_user(
     user_id: int, job: schemas.JobCreate, db: Session = Depends(get_db)
 ):
@@ -48,13 +48,13 @@ def create_job_for_user(
     return db_job
 
 
-@app.get("/jobs/", response_model=list[schemas.Job])
+@app.get("/jobs/", response_model=list[schemas.Job], tags=['Job'])
 def read_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     jobs = crud.get_jobs(db, skip=skip, limit=limit)
     return jobs
 
 
-@app.post("/send_job/")
+@app.post("/send_job/", tags=['Job'])
 def create_job(title: str, content: str):
     url = "http://crawler_service:8000/crawled_data/"
     payload = {"title": title, "content": content}
