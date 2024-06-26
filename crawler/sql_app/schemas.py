@@ -20,3 +20,20 @@ class CrawledDataCreate(CrawledDataBase):
 
 class CrawledData(CrawledDataBase):
     id: int
+
+
+
+class JobBase(BaseModel):
+    user_id :int
+    city :str | None = None
+    category :str | None = None
+    number_of_cards :str | None = None
+
+    class Config:
+        orm_mode = True
+
+class JobCreate (JobBase):
+    pass
+
+class Job(JobBase):
+    id: int

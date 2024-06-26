@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from .models import CrawledData
-from .schemas import CrawledDataCreate, CrawledDataBase
+from .models import CrawledData, Job
+from .schemas import CrawledDataCreate, CrawledDataBase, JobBase, JobCreate
 
 
 def get_crawled_data(db: Session, skip: int = 0, limit: int = 100):
@@ -56,3 +56,48 @@ def delete_crawled_data(db: Session, data_id: int):
     db.delete(db_crawled_data)
     db.commit()
     return db_crawled_data
+
+
+
+
+def get_jobs(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Job).offset(skip).limit(limit).all()
+
+def get_job_by_id(db: Session, job_id: int):
+    return db.query(Job).filter(Job.id == job_id).first()
+
+def get_jobs_by_user_id(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    return db.query(Job).filter(Job.user_id == user_id).offset(skip).limit(limit).all()
+
+def create_job(db: Session, job: JobCreate):
+    db_job = Job(
+        user_id=job.user_id,
+        city=job.city,
+        category=job.category,
+        number_of_cards=job.number_of_cards,
+    )
+    db.add(db_job)
+    db.commit()
+    db.refresh(db_job)
+    return db_job
+
+def update_job(db: Session, job_id: int, job: JobBase):
+    db_job = db.query(Job).filter(Job.id == job_id).first()
+    if not db_job:
+        return None
+
+    for key, value in job.dict(exclude_unset=True).items():
+        setattr(db_job, key, value)
+
+    db.commit()
+    db.refresh(db_job)
+    return db_job
+
+def delete_job(db: Session, job_id: int):
+    db_job = db.query(Job).filter(Job.id == job_id).first()
+    if not db_job:
+        return None
+
+    db.delete(db_job)
+    db.commit()
+    return db_job

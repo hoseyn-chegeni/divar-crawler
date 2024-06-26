@@ -15,3 +15,11 @@ class CrawledData(Base):
     has_chat = Column(Boolean, default=False)
     token = Column(String, nullable=True)
     category = Column(String, nullable=True)
+
+class Job (Base):
+    __tablename__ = 'job'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    city = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    number_of_cards = Column(String, nullable=True)
