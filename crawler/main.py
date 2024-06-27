@@ -4,13 +4,12 @@ from sql_app import crud, models, schemas
 from sql_app.database import SessionLocal, engine
 from bs4 import BeautifulSoup
 import requests
-import time
-from pydantic import BaseModel
+
+
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
 
 # Dependency to get the database session
 def get_db():
@@ -174,23 +173,20 @@ def read_jobs_by_user(
     return crud.get_jobs_by_user_id(db, user_id=user_id, skip=skip, limit=limit)
 
 
-
-
-
-
-
 @app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
-def create_job(job: schemas.JobCreate,background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def create_job(job: schemas.JobCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     db_job = crud.create_job(db=db, job=job)
-    background_tasks.add_task(crawl_page_and_save_data, job.city, job.category, db)
+    background_tasks.add_task(crawl_page_and_save_data, job.city, job.category, db, db_job.id)
     return db_job
 
-def crawl_page_and_save_data(city: str, category: str, db: Session):
+
+def crawl_page_and_save_data(city: str, category: str, db: Session, job_id: int):
     base_url = "https://divar.ir/s"
     url = f"{base_url}/{city}/{category}"
     response = requests.get(url)
 
     if response.status_code != 200:
+        crud.update_job_status(db, job_id, schemas.JobStatusEnum.failed)
         print(f"Failed to crawl URL: {url} - Status code: {response.status_code}")
         return
 
@@ -203,5 +199,8 @@ def crawl_page_and_save_data(city: str, category: str, db: Session):
             title = title_tag.get_text(strip=True)
             titles.append(title)
             # Create a new crawled data entry for each title
-            db_crawled_data = schemas.CrawledDataCreate(title=title)
+            db_crawled_data = schemas.CrawledDataCreate(title=title, url=url)
             crud.create_crawled_data(db, db_crawled_data)
+
+    # Update job status to done if crawling is successful
+    crud.update_job_status(db, job_id, schemas.JobStatusEnum.done)

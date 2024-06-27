@@ -1,20 +1,16 @@
 from sqlalchemy.orm import Session
 from .models import CrawledData, Job
-from .schemas import CrawledDataCreate, CrawledDataBase, JobBase, JobCreate
-
+from .schemas import CrawledDataCreate, CrawledDataBase, JobBase, JobCreate, JobStatusEnum
 
 def get_crawled_data(db: Session, skip: int = 0, limit: int = 100):
-    """Fetch a list of crawled data from the database with optional pagination."""
     return db.query(CrawledData).offset(skip).limit(limit).all()
 
 
 def get_crawled_data_by_id(db: Session, data_id: int):
-    """Fetch a single crawled data entry by its ID."""
     return db.query(CrawledData).filter(CrawledData.id == data_id).first()
 
 
 def create_crawled_data(db: Session, crawled_data: CrawledDataCreate):
-    """Create a new crawled data entry in the database."""
     db_crawled_data = CrawledData(
         title=crawled_data.title,
         url=crawled_data.url,
@@ -34,7 +30,6 @@ def create_crawled_data(db: Session, crawled_data: CrawledDataCreate):
 
 
 def update_crawled_data(db: Session, data_id: int, crawled_data: CrawledDataBase):
-    """Update an existing crawled data entry in the database."""
     db_crawled_data = db.query(CrawledData).filter(CrawledData.id == data_id).first()
     if not db_crawled_data:
         return None
@@ -48,7 +43,6 @@ def update_crawled_data(db: Session, data_id: int, crawled_data: CrawledDataBase
 
 
 def delete_crawled_data(db: Session, data_id: int):
-    """Delete a crawled data entry from the database by its ID."""
     db_crawled_data = db.query(CrawledData).filter(CrawledData.id == data_id).first()
     if not db_crawled_data:
         return None
@@ -109,3 +103,11 @@ def delete_job(db: Session, job_id: int):
 
 def get_job_status(db: Session, job_id: int):
     return db.query(Job).filter(Job.id == job_id).first()
+
+def update_job_status(db: Session, job_id: int, status: JobStatusEnum):
+    db_job = db.query(Job).filter(Job.id == job_id).first()
+    if db_job:
+        db_job.status = status
+        db.commit()
+        db.refresh(db_job)
+    return db_job

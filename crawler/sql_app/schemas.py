@@ -62,3 +62,6 @@ class JobStatusEnum(str, Enum):
 class JobStatus(BaseModel):
     job_id: int
     status: JobStatusEnum
+
+class JobUpdateStatus(BaseModel):
+    status: JobStatusEnum
