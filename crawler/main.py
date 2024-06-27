@@ -137,7 +137,7 @@ class CrawlRequest(BaseModel):
     category: str
     city: str
 
-@app.post("/crawl")
+@app.post("/crawl_with_parameters/")
 def crawl(request: CrawlRequest):
     base_url = "https://divar.ir/s"
     url = f"{base_url}/{request.city}/{request.category}"
