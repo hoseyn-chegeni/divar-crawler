@@ -1,6 +1,32 @@
 version: '3.8'
 
 services:
+  postgres_job:
+    image: postgres:15
+    container_name: postgres_job
+    restart: always
+    environment:
+      POSTGRES_USER: job_user
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: job_db
+    ports:
+      - "5434:5432"  # Map host port 5434 to container port 5432
+    networks:
+      - divar_network
+
+  postgres_crawler:
+    image: postgres:15
+    container_name: postgres_crawler
+    restart: always
+    environment:
+      POSTGRES_USER: crawler_user
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: crawler_db
+    ports:
+      - "5433:5432"  # Map host port 5433 to container port 5432
+    networks:
+      - divar_network
+
   job:
     build:
       context: ./job
@@ -10,6 +36,8 @@ services:
       - "8001:8001"
     networks:
       - divar_network
+    depends_on:
+      - postgres_job
 
   crawler:
     build:
@@ -21,7 +49,7 @@ services:
     networks:
       - divar_network
     depends_on:
-      - job
+      - postgres_crawler
 
 networks:
   divar_network:
