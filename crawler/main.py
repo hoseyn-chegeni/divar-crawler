@@ -5,7 +5,7 @@ from sql_app.database import SessionLocal, engine
 from bs4 import BeautifulSoup
 import requests
 import time
-
+from pydantic import BaseModel
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
@@ -102,29 +102,6 @@ def crawl_and_store_titles(
     return {"message": "Crawling and storing titles in the background"}
 
 
-@app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
-def create_job(job: schemas.JobCreate, db: Session = Depends(get_db)):
-    return crud.create_job(db=db, job=job)
-
-
-@app.get("/jobs/", response_model=list[schemas.Job], tags=["Jobs"])
-def read_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return crud.get_jobs(db, skip=skip, limit=limit)
-
-
-@app.get("/jobs/{job_id}/", response_model=schemas.Job, tags=["Jobs"])
-def read_job(job_id: int, db: Session = Depends(get_db)):
-    db_job = crud.get_job_by_id(db, job_id)
-    if db_job is None:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return db_job
-
-
-@app.get("/jobs/user/{user_id}/", response_model=list[schemas.Job], tags=["Jobs"])
-def read_jobs_by_user(
-    user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
-):
-    return crud.get_jobs_by_user_id(db, user_id=user_id, skip=skip, limit=limit)
 
 
 def crawl_and_store_titles_task(url: str, db: Session):
@@ -155,9 +132,69 @@ def crawl_and_store_titles(
     return {"message": "Crawling and storing titles in the background"}
 
 
+
+class CrawlRequest(BaseModel):
+    category: str
+    city: str
+
+@app.post("/crawl")
+def crawl(request: CrawlRequest):
+    base_url = "https://divar.ir/s"
+    url = f"{base_url}/{request.city}/{request.category}"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=404, detail="Page not found")
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+    title = soup.title.string if soup.title else "No title found"
+
+    return {"url": url, "title": title}
+
+
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##################JOBS####################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+
+
+
 @app.get("/jobs/{job_id}/status", response_model=schemas.JobStatus, tags=["Jobs"])
 def get_job_status(job_id: int, db: Session = Depends(get_db)):
     job = crud.get_job_status(db, job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
     return schemas.JobStatus(job_id=job.id, status=job.status.value)
+
+
+
+@app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
+def create_job(job: schemas.JobCreate, db: Session = Depends(get_db)):
+    return crud.create_job(db=db, job=job)
+
+
+@app.get("/jobs/", response_model=list[schemas.Job], tags=["Jobs"])
+def read_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_jobs(db, skip=skip, limit=limit)
+
+
+@app.get("/jobs/{job_id}/", response_model=schemas.Job, tags=["Jobs"])
+def read_job(job_id: int, db: Session = Depends(get_db)):
+    db_job = crud.get_job_by_id(db, job_id)
+    if db_job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return db_job
+
+
+@app.get("/jobs/user/{user_id}/", response_model=list[schemas.Job], tags=["Jobs"])
+def read_jobs_by_user(
+    user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+):
+    return crud.get_jobs_by_user_id(db, user_id=user_id, skip=skip, limit=limit)
