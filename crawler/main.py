@@ -194,13 +194,14 @@ def crawl_page_and_save_data(city: str, category: str, db: Session):
         print(f"Failed to crawl URL: {url} - Status code: {response.status_code}")
         return
 
-    soup = BeautifulSoup(response.content, 'html.parser')
-    title = soup.title.string if soup.title else "No title found"
-
-    crawled_data = schemas.CrawledDataCreate(
-        title=title,
-        url=url,
-        # Add additional fields as required
-    )
-
-    crud.create_crawled_data(db, crawled_data)
+    soup = BeautifulSoup(response.content, "html.parser")
+    articles = soup.find_all("article", class_="kt-post-card")
+    titles = []
+    for article in articles:
+        title_tag = article.find("h2", class_="kt-post-card__title")
+        if title_tag:
+            title = title_tag.get_text(strip=True)
+            titles.append(title)
+            # Create a new crawled data entry for each title
+            db_crawled_data = schemas.CrawledDataCreate(title=title)
+            crud.create_crawled_data(db, db_crawled_data)
