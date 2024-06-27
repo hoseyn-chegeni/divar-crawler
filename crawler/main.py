@@ -5,6 +5,7 @@ from sql_app.database import SessionLocal, engine
 from bs4 import BeautifulSoup
 import requests
 import time
+
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
@@ -88,17 +89,17 @@ def crawl_and_store_titles_task(url: str, db: Session):
             db_crawled_data = schemas.CrawledDataCreate(title=title)
             crud.create_crawled_data(db, db_crawled_data)
     # Log to file (optional)
-    with open('log.txt', mode='a') as log_file:
+    with open("log.txt", mode="a") as log_file:
         content = f"Crawled URL: {url}, Titles: {titles}\n"
         log_file.write(content)
 
 
 @app.get("/crawl/", tags=["Crawled Data"])
-def crawl_and_store_titles(url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def crawl_and_store_titles(
+    url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+):
     background_tasks.add_task(crawl_and_store_titles_task, url, db)
     return {"message": "Crawling and storing titles in the background"}
-
-
 
 
 @app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
@@ -126,14 +127,6 @@ def read_jobs_by_user(
     return crud.get_jobs_by_user_id(db, user_id=user_id, skip=skip, limit=limit)
 
 
-
-
-
-
-
-
-
-
 def crawl_and_store_titles_task(url: str, db: Session):
     try:
         response = requests.get(url)
@@ -152,14 +145,12 @@ def crawl_and_store_titles_task(url: str, db: Session):
             # Create a new crawled data entry for each title
             db_crawled_data = schemas.CrawledDataCreate(title=title)
             crud.create_crawled_data(db, db_crawled_data)
-    # Log to file (optional)
-    with open('log.txt', mode='a') as log_file:
-        content = f"Crawled URL: {url}, Titles: {titles}\n"
-        log_file.write(content)
 
 
 @app.get("/crawl/", tags=["Crawled Data"])
-def crawl_and_store_titles(url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def crawl_and_store_titles(
+    url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+):
     background_tasks.add_task(crawl_and_store_titles_task, url, db)
     return {"message": "Crawling and storing titles in the background"}
 

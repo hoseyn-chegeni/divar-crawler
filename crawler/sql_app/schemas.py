@@ -59,7 +59,6 @@ class JobStatusEnum(str, Enum):
     failed = "failed"
 
 
-
 class JobStatus(BaseModel):
     job_id: int
     status: JobStatusEnum
