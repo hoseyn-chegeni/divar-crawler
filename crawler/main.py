@@ -154,12 +154,6 @@ def get_job_status(job_id: int, db: Session = Depends(get_db)):
     return schemas.JobStatus(job_id=job.id, status=job.status.value)
 
 
-
-# @app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
-# def create_job(job: schemas.JobCreate, db: Session = Depends(get_db)):
-#     return crud.create_job(db=db, job=job)
-
-
 @app.get("/jobs/", response_model=list[schemas.Job], tags=["Jobs"])
 def read_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_jobs(db, skip=skip, limit=limit)
