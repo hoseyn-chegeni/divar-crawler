@@ -132,26 +132,6 @@ def crawl_and_store_titles(
     return {"message": "Crawling and storing titles in the background"}
 
 
-
-class CrawlRequest(BaseModel):
-    category: str
-    city: str
-
-@app.post("/crawl_with_parameters/")
-def crawl(request: CrawlRequest):
-    base_url = "https://divar.ir/s"
-    url = f"{base_url}/{request.city}/{request.category}"
-    response = requests.get(url)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=404, detail="Page not found")
-
-    soup = BeautifulSoup(response.content, 'html.parser')
-    title = soup.title.string if soup.title else "No title found"
-
-    return {"url": url, "title": title}
-
-
 ##########################################
 ##########################################
 ##########################################
@@ -175,9 +155,9 @@ def get_job_status(job_id: int, db: Session = Depends(get_db)):
 
 
 
-@app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
-def create_job(job: schemas.JobCreate, db: Session = Depends(get_db)):
-    return crud.create_job(db=db, job=job)
+# @app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
+# def create_job(job: schemas.JobCreate, db: Session = Depends(get_db)):
+#     return crud.create_job(db=db, job=job)
 
 
 @app.get("/jobs/", response_model=list[schemas.Job], tags=["Jobs"])
@@ -198,3 +178,35 @@ def read_jobs_by_user(
     user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):
     return crud.get_jobs_by_user_id(db, user_id=user_id, skip=skip, limit=limit)
+
+
+
+
+
+
+
+@app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
+def create_job(job: schemas.JobCreate,background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    db_job = crud.create_job(db=db, job=job)
+    background_tasks.add_task(crawl_page_and_save_data, job.city, job.category, db)
+    return db_job
+
+def crawl_page_and_save_data(city: str, category: str, db: Session):
+    base_url = "https://divar.ir/s"
+    url = f"{base_url}/{city}/{category}"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        print(f"Failed to crawl URL: {url} - Status code: {response.status_code}")
+        return
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+    title = soup.title.string if soup.title else "No title found"
+
+    crawled_data = schemas.CrawledDataCreate(
+        title=title,
+        url=url,
+        # Add additional fields as required
+    )
+
+    crud.create_crawled_data(db, crawled_data)
