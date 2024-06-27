@@ -19,20 +19,6 @@ def get_db():
     finally:
         db.close()
 
-
-# Create a new crawled data entry
-@app.post(
-    "/crawled_data/",
-    response_model=schemas.CrawledData,
-    status_code=201,
-    tags=["Crawled Data"],
-)
-def create_crawled_data(
-    crawled_data: schemas.CrawledDataCreate, db: Session = Depends(get_db)
-):
-    return crud.create_crawled_data(db=db, crawled_data=crawled_data)
-
-
 # Read multiple crawled data entries with pagination
 @app.get(
     "/crawled_data/", response_model=list[schemas.CrawledData], tags=["Crawled Data"]
@@ -54,83 +40,6 @@ def read_crawled_data_by_id(crawled_data_id: int, db: Session = Depends(get_db))
     return db_crawled_data
 
 
-# Crawl a title from a given URL
-@app.get("/crawl-title/", tags=["Crawled Data"])
-def crawl_title(url: str):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    soup = BeautifulSoup(response.content, "html.parser")
-    title = soup.title.string if soup.title else "No title found"
-
-    return {"url": url, "title": title}
-
-
-def crawl_and_store_titles_task(url: str, db: Session):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    soup = BeautifulSoup(response.content, "html.parser")
-    articles = soup.find_all("article", class_="kt-post-card")
-    titles = []
-    for article in articles:
-        title_tag = article.find("h2", class_="kt-post-card__title")
-        if title_tag:
-            title = title_tag.get_text(strip=True)
-            titles.append(title)
-            # Create a new crawled data entry for each title
-            db_crawled_data = schemas.CrawledDataCreate(title=title)
-            crud.create_crawled_data(db, db_crawled_data)
-    # Log to file (optional)
-    with open("log.txt", mode="a") as log_file:
-        content = f"Crawled URL: {url}, Titles: {titles}\n"
-        log_file.write(content)
-
-
-@app.get("/crawl/", tags=["Crawled Data"])
-def crawl_and_store_titles(
-    url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
-):
-    background_tasks.add_task(crawl_and_store_titles_task, url, db)
-    return {"message": "Crawling and storing titles in the background"}
-
-
-
-
-def crawl_and_store_titles_task(url: str, db: Session):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    soup = BeautifulSoup(response.content, "html.parser")
-    articles = soup.find_all("article", class_="kt-post-card")
-    titles = []
-    for article in articles:
-        title_tag = article.find("h2", class_="kt-post-card__title")
-        if title_tag:
-            title = title_tag.get_text(strip=True)
-            titles.append(title)
-            # Create a new crawled data entry for each title
-            db_crawled_data = schemas.CrawledDataCreate(title=title)
-            crud.create_crawled_data(db, db_crawled_data)
-
-
-@app.get("/crawl/", tags=["Crawled Data"])
-def crawl_and_store_titles(
-    url: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
-):
-    background_tasks.add_task(crawl_and_store_titles_task, url, db)
-    return {"message": "Crawling and storing titles in the background"}
-
-
 ##########################################
 ##########################################
 ##########################################
@@ -142,7 +51,6 @@ def crawl_and_store_titles(
 ##########################################
 ##########################################
 ##########################################
-
 
 
 @app.get("/jobs/{job_id}/status", response_model=schemas.JobStatus, tags=["Jobs"])
