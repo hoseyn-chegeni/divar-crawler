@@ -23,7 +23,6 @@ def create_crawled_data(db: Session, crawled_data: CrawledDataCreate):
         token=crawled_data.token,
         category=crawled_data.category,
         job_id=crawled_data.job_id
-
     )
     db.add(db_crawled_data)
     db.commit()

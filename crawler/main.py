@@ -81,12 +81,12 @@ def read_jobs_by_user(
     return crud.get_jobs_by_user_id(db, user_id=user_id, skip=skip, limit=limit)
 
 
+
 @app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
 def create_job(job: schemas.JobCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     db_job = crud.create_job(db=db, job=job)
     background_tasks.add_task(crawl_page_and_save_data, job.city, job.category, db, db_job.id)
     return db_job
-
 
 def crawl_page_and_save_data(city: str, category: str, db: Session, job_id: int):
     base_url = "https://divar.ir/s"
@@ -107,7 +107,7 @@ def crawl_page_and_save_data(city: str, category: str, db: Session, job_id: int)
             title = title_tag.get_text(strip=True)
             titles.append(title)
             # Create a new crawled data entry for each title
-            db_crawled_data = schemas.CrawledDataCreate(title=title, url=url)
+            db_crawled_data = schemas.CrawledDataCreate(title=title, url=url, job_id=job_id)
             crud.create_crawled_data(db, db_crawled_data)
 
     # Update job status to done if crawling is successful

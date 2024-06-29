@@ -9,6 +9,16 @@ class JobStatus(enum.Enum):
     done = "done"
     failed = "failed"
 
+class Job(Base):
+    __tablename__ = "job"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    city = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    number_of_cards = Column(String, nullable=True)
+    status = Column(Enum(JobStatus), default=JobStatus.in_queue)
+    crawled_data = relationship("CrawledData", back_populates="job")
+
 
 class CrawledData(Base):
     __tablename__ = "crawled_data"
@@ -24,16 +34,6 @@ class CrawledData(Base):
     has_chat = Column(Boolean, default=False)
     token = Column(String, nullable=True)
     category = Column(String, nullable=True)
-    job_id = Column(Integer, ForeignKey("jobs.id"))
+    job_id = Column(Integer, ForeignKey("job.id"))
+
     job = relationship("Job", back_populates="crawled_data")
-
-
-class Job(Base):
-    __tablename__ = "job"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, index=True)
-    city = Column(String, nullable=True)
-    category = Column(String, nullable=True)
-    number_of_cards = Column(String, nullable=True)
-    status = Column(Enum(JobStatus), default=JobStatus.in_queue)
-    crawled_data = relationship("CrawledData", back_populates="job")
