@@ -98,16 +98,19 @@ def read_jobs_by_user(
 
 
 
+
 @app.post("/jobs/", response_model=schemas.Job, status_code=201, tags=["Jobs"])
 def create_job(job: schemas.JobCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     db_job = crud.create_job(db=db, job=job)
-    background_tasks.add_task(crawl_page_and_save_data, job.city, job.category, db, db_job.id)
+    background_tasks.add_task(crawl_page_and_save_data, job.city, job.category, db_job.id)
     return db_job
 
-def crawl_page_and_save_data(city: str, category: str, db: Session, job_id: int):
+def crawl_page_and_save_data(city: str, category: str, job_id: int):
     base_url = "https://divar.ir/s"
     url = f"{base_url}/{city}/{category}"
     response = requests.get(url)
+
+    db = SessionLocal()
 
     if response.status_code != 200:
         crud.update_job_status(db, job_id, schemas.JobStatusEnum.failed)
@@ -127,4 +130,34 @@ def crawl_page_and_save_data(city: str, category: str, db: Session, job_id: int)
             crud.create_crawled_data(db, db_crawled_data)
 
     # Update job status to done if crawling is successful
-    crud.update_job_status(db, job_id, schemas.JobStatusEnum.done)         
+    crud.update_job_status(db, job_id, schemas.JobStatusEnum.done)
+
+    # Fetch crawled data and send to job_service
+    send_data_to_job_service(job_id, db)
+
+    db.close()
+
+def send_data_to_job_service(job_id: int, db: Session):
+    crawler_service_url = f"http://crawler_service:8000/crawled_data/by_job/{job_id}"
+
+    # Fetch crawled data from crawler_service
+    response = requests.get(crawler_service_url)
+    if response.status_code != 200:
+        print(f"Failed to fetch crawled data for job ID {job_id} - Status code: {response.status_code}")
+        return
+
+    crawled_data = response.json()
+    for data in crawled_data:
+        job_service_url = "http://job_service:8001/crawled_data/"
+        response = requests.post(job_service_url, json=data)
+        if response.status_code != 201:
+            print(f"Failed to send crawled data to job service for job ID {job_id} - Status code: {response.status_code}")
+            return
+
+    # Now delete the crawled data from crawler_service
+    delete_url = f"http://crawler_service:8000/crawled_data/by_job/{job_id}"
+    response = requests.delete(delete_url)
+    if response.status_code != 200:
+        print(f"Failed to delete crawled data for job ID {job_id} - Status code: {response.status_code}")
+    else:
+        print(f"Successfully copied and deleted crawled data for job ID {job_id}")
