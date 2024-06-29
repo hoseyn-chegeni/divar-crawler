@@ -97,3 +97,33 @@ def get_job_status(job_id: int):
         return response.json()
     else:
         raise HTTPException(status_code=response.status_code, detail=response.json())
+
+
+
+
+####################
+####################
+####################
+# CRAWLED DATA
+####################
+####################
+####################
+
+
+
+@app.get("/crawled_data/", response_model=list[schemas.CrawledData])
+def read_crawled_data(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    crawled_data = crud.get_crawled_data(db, skip=skip, limit=limit)
+    return crawled_data
+
+@app.get("/crawled_data/{data_id}", response_model=schemas.CrawledData)
+def read_crawled_data_by_id(data_id: int, db: Session = Depends(get_db)):
+    db_crawled_data = crud.get_crawled_data_by_id(db, data_id=data_id)
+    if db_crawled_data is None:
+        raise HTTPException(status_code=404, detail="CrawledData not found")
+    return db_crawled_data
+
+@app.post("/crawled_data/", response_model=schemas.CrawledData)
+def create_crawled_data(crawled_data: schemas.CrawledDataCreate, db: Session = Depends(get_db)):
+    return crud.create_crawled_data(db=db, crawled_data=crawled_data)
+
