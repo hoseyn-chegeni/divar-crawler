@@ -40,6 +40,22 @@ def read_crawled_data_by_id(crawled_data_id: int, db: Session = Depends(get_db))
     return db_crawled_data
 
 
+
+#DELETE AND READ CRAWLED DATA BY JOB ID 
+@app.get("/crawled_data/by_job/{job_id}", response_model=list[schemas.CrawledData], tags=["Crawled Data By Job"])
+def read_crawled_data_by_job(job_id: int, db: Session = Depends(get_db)):
+    crawled_data = crud.get_crawled_data_by_job(db, job_id=job_id)
+    if not crawled_data:
+        raise HTTPException(status_code=404, detail="CrawledData not found")
+    return crawled_data
+
+@app.delete("/crawled_data/by_job/{job_id}", response_model=list[schemas.CrawledData], tags=["Crawled Data By Job"])
+def delete_crawled_data_by_job(job_id: int, db: Session = Depends(get_db)):
+    crawled_data = crud.delete_crawled_data_by_job(db, job_id=job_id)
+    if not crawled_data:
+        raise HTTPException(status_code=404, detail="CrawledData not found")
+    return crawled_data
+
 ##########################################
 ##########################################
 ##########################################
@@ -111,4 +127,4 @@ def crawl_page_and_save_data(city: str, category: str, db: Session, job_id: int)
             crud.create_crawled_data(db, db_crawled_data)
 
     # Update job status to done if crawling is successful
-    crud.update_job_status(db, job_id, schemas.JobStatusEnum.done)
+    crud.update_job_status(db, job_id, schemas.JobStatusEnum.done)         

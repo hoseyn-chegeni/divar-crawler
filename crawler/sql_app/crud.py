@@ -99,3 +99,16 @@ def update_job_status(db: Session, job_id: int, status: JobStatusEnum):
         db.commit()
         db.refresh(db_job)
     return db_job
+
+
+def get_crawled_data_by_job(db: Session, job_id: int):
+    return db.query(CrawledData).filter(CrawledData.job_id == job_id).all()
+
+def delete_crawled_data_by_job(db: Session, job_id: int):
+    crawled_data = db.query(CrawledData).filter(CrawledData.job_id == job_id).all()
+    if not crawled_data:
+        return None
+    for data in crawled_data:
+        db.delete(data)
+    db.commit()
+    return crawled_data
