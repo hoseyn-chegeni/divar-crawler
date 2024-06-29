@@ -150,9 +150,10 @@ def send_data_to_job_service(job_id: int, db: Session):
     for data in crawled_data:
         job_service_url = "http://job_service:8001/crawled_data/"
         response = requests.post(job_service_url, json=data)
-        if response.status_code != 201:
+        if response.status_code == 201:
+            print(f"Successfully sent crawled data to job service for job ID {job_id}")
+        else:
             print(f"Failed to send crawled data to job service for job ID {job_id} - Status code: {response.status_code}")
-            return
 
     # Now delete the crawled data from crawler_service
     delete_url = f"http://crawler_service:8000/crawled_data/by_job/{job_id}"
@@ -160,4 +161,4 @@ def send_data_to_job_service(job_id: int, db: Session):
     if response.status_code != 200:
         print(f"Failed to delete crawled data for job ID {job_id} - Status code: {response.status_code}")
     else:
-        print(f"Successfully copied and deleted crawled data for job ID {job_id}")
+        print(f"Successfully deleted crawled data for job ID {job_id}")
