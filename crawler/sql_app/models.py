@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum
+from sqlalchemy import Column, Integer, String, Boolean, Enum, ForeignKey
 from .database import Base
 import enum
-
+from sqlalchemy.orm import relationship
 
 class JobStatus(enum.Enum):
     in_queue = "in_queue"
@@ -24,6 +24,8 @@ class CrawledData(Base):
     has_chat = Column(Boolean, default=False)
     token = Column(String, nullable=True)
     category = Column(String, nullable=True)
+    job_id = Column(Integer, ForeignKey("jobs.id"))
+    job = relationship("Job", back_populates="crawled_data")
 
 
 class Job(Base):
@@ -34,3 +36,4 @@ class Job(Base):
     category = Column(String, nullable=True)
     number_of_cards = Column(String, nullable=True)
     status = Column(Enum(JobStatus), default=JobStatus.in_queue)
+    crawled_data = relationship("CrawledData", back_populates="job")

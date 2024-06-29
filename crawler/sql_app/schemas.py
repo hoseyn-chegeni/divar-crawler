@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
-
+from typing import List, Optional
 
 class CrawledDataBase(BaseModel):
     title: str
@@ -13,6 +13,7 @@ class CrawledDataBase(BaseModel):
     has_chat: bool = False
     token: str | None = None
     category: str | None = None
+    job_id: Optional[int] = None
 
     class Config:
         orm_mode = True
@@ -50,6 +51,7 @@ class JobCreate(JobBase):
 
 class Job(JobBase):
     id: int
+    crawled_data: List[CrawledData] = []
 
 
 class JobStatusEnum(str, Enum):

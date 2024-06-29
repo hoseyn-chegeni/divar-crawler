@@ -22,21 +22,10 @@ def create_crawled_data(db: Session, crawled_data: CrawledDataCreate):
         has_chat=crawled_data.has_chat,
         token=crawled_data.token,
         category=crawled_data.category,
+        job_id=crawled_data.job_id
+
     )
     db.add(db_crawled_data)
-    db.commit()
-    db.refresh(db_crawled_data)
-    return db_crawled_data
-
-
-def update_crawled_data(db: Session, data_id: int, crawled_data: CrawledDataBase):
-    db_crawled_data = db.query(CrawledData).filter(CrawledData.id == data_id).first()
-    if not db_crawled_data:
-        return None
-
-    for key, value in crawled_data.dict(exclude_unset=True).items():
-        setattr(db_crawled_data, key, value)
-
     db.commit()
     db.refresh(db_crawled_data)
     return db_crawled_data
