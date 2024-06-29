@@ -14,14 +14,14 @@ class User(Base):
 
 
 class Job(Base):
-    __tablename__ = "jobs"
+    __tablename__ = "job"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String)
     owner_id = Column(Integer, ForeignKey("users.id"))
-
     owner = relationship("User", back_populates="jobs")
+    crawled_data = relationship("CrawledData", back_populates="job")
 
 class CrawledData(Base):
     __tablename__ = 'crawled_data'
@@ -36,3 +36,5 @@ class CrawledData(Base):
     has_chat = Column(Boolean, default=False)
     token = Column(String, nullable=True)
     category = Column(String, nullable=True)
+    job_id = Column(Integer, ForeignKey("job.id"))
+    job = relationship("Job", back_populates="crawled_data")
